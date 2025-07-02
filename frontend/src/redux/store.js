@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer, { loadFromStorage as loadAuthFromStorage } from './slices/authSlice';
 import favoritesReducer from './slices/favoritesSlice';
+import ayahReducer from './slices/ayahSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 // Utility to load favorites from localStorage
@@ -20,7 +21,8 @@ const loadFavoritesFromStorage = () => {
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    favorites: favoritesReducer
+    favorites: favoritesReducer,
+    ayah: ayahReducer,
   },
   preloadedState: {
     favorites: {

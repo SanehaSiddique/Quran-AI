@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../redux/store';
-import { login } from '../redux/slices/authSlice';
-
+import { loginUser, signupUser } from '../redux/slices/authSlice';
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,11 +23,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       if (isLogin) {
-        dispatch(login({ email }));
+        await dispatch(loginUser({ email, password })).unwrap();
       } else {
-        // Simulate registration
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        dispatch(login({ email }));
+        await dispatch(signupUser({ name, email, password })).unwrap();
       }
       
       onSuccess?.();
@@ -39,7 +36,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       setPassword('');
       setName('');
     } catch (err) {
-      setError('Authentication failed. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

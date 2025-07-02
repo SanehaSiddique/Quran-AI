@@ -1,43 +1,80 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import AyahCard from '../components/AyahCard';
-import { ayahsData, surahs, themes } from '../data/mockData';
+import { surahs } from '../data/mockData';
+import { useAppDispatch, useAppSelector } from '../redux/store';
+import { fetchAyahsBySurah } from '../redux/slices/ayahSlice';
+import API from '../../axiosInstance';
 
 const Explore = () => {
+  const dispatch = useAppDispatch();
+  const rawAyahs = useAppSelector((state) => state.ayah.ayahs);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSurah, setSelectedSurah] = useState('');
-  const [selectedTheme, setSelectedTheme] = useState('');
+  const [themeQuery, setThemeQuery] = useState('');
+  const [aiAyahs, setAiAyahs] = useState([]);
+  const [isAIActive, setIsAIActive] = useState(false);
+
+  const ayahs = useMemo(() => {
+    return rawAyahs.map((ayah) => ({
+      ...ayah,
+    }));
+  }, [rawAyahs]);
+
+  useEffect(() => {
+    if (selectedSurah) {
+      const surahIndex = surahs.indexOf(selectedSurah) + 1;
+      if (surahIndex > 0) dispatch(fetchAyahsBySurah(surahIndex));
+    }
+  }, [selectedSurah, dispatch]);
+
+  const handleAIThemeSearch = async () => {
+    if (!themeQuery || !selectedSurah) return alert("Please select a surah and enter a theme.");
+
+    const surahNo = surahs.indexOf(selectedSurah) + 1;
+    try {
+      const res = await API.post('/api/search-theme', {
+        theme: themeQuery,
+        surahNo,
+      });
+      setAiAyahs(res.data.matchedAyahs || []);
+      setIsAIActive(true);
+    } catch (error) {
+      alert("Failed to get results from AI.");
+    }
+  };
 
   const filteredAyahs = useMemo(() => {
-    return ayahsData.filter(ayah => {
-      const matchesSearch = searchQuery === '' || 
-        ayah.arabic.includes(searchQuery) ||
-        ayah.translation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ayah.tafsir.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesSurah = selectedSurah === '' || ayah.surah === selectedSurah;
-      const matchesTheme = selectedTheme === '' || ayah.theme === selectedTheme;
+    const list = isAIActive ? aiAyahs : ayahs;
 
-      return matchesSearch && matchesSurah && matchesTheme;
+    return list.filter((ayah) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        ayah.numberInSurah?.toString().includes(searchQuery) ||
+        ayah.arabic?.includes(searchQuery) ||
+        ayah.translation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ayah.translation_urdu?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesSearch;
     });
-  }, [searchQuery, selectedSurah, selectedTheme]);
+  }, [searchQuery, isAIActive, aiAyahs, ayahs]);
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedSurah('');
-    setSelectedTheme('');
+    setThemeQuery('');
+    setAiAyahs([]);
+    setIsAIActive(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Explore the Quran
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Explore the Quran</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Discover ayahs by theme, surah, or search for specific content
+            Discover ayahs by theme, surah, or search specific content
           </p>
         </div>
 
@@ -45,25 +82,23 @@ const Explore = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center mb-4">
             <Filter className="h-5 w-5 text-gray-500 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Filters
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filters</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Search */}
+            {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search ayahs..."
+                placeholder="Search ayahs (text or number)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
 
-            {/* Surah Filter */}
+            {/* Surah Dropdown */}
             <div>
               <select
                 value={selectedSurah}
@@ -72,50 +107,37 @@ const Explore = () => {
               >
                 <option value="">All Surahs</option>
                 {surahs.map((surah) => (
-                  <option key={surah} value={surah}>
-                    {surah}
-                  </option>
+                  <option key={surah} value={surah}>{surah}</option>
                 ))}
               </select>
             </div>
 
-            {/* Theme Filter */}
-            <div>
-              <select
-                value={selectedTheme}
-                onChange={(e) => setSelectedTheme(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
+            {/* AI Theme Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter a theme (e.g., Patience)"
+                value={themeQuery}
+                onChange={(e) => setThemeQuery(e.target.value)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              <button
+                onClick={handleAIThemeSearch}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200"
               >
-                <option value="">All Themes</option>
-                {themes.map((theme) => (
-                  <option key={theme} value={theme}>
-                    {theme}
-                  </option>
-                ))}
-              </select>
+                Search
+              </button>
             </div>
           </div>
 
-          {/* Active Filters and Clear */}
-          {(searchQuery || selectedSurah || selectedTheme) && (
+          {/* Active Filters */}
+          {(searchQuery || selectedSurah || themeQuery) && (
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
-                {searchQuery && (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs">
-                    Search: "{searchQuery}"
-                  </span>
-                )}
-                {selectedSurah && (
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs">
-                    Surah: {selectedSurah}
-                  </span>
-                )}
-                {selectedTheme && (
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs">
-                    Theme: {selectedTheme}
-                  </span>
-                )}
+                {searchQuery && <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs">Search: "{searchQuery}"</span>}
+                {selectedSurah && <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs">Surah: {selectedSurah}</span>}
+                {themeQuery && <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs">Theme: {themeQuery}</span>}
               </div>
               <button
                 onClick={clearFilters}
@@ -134,24 +156,18 @@ const Explore = () => {
           </p>
         </div>
 
-        {/* Ayahs Grid */}
+        {/* Ayah Cards */}
         {filteredAyahs.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredAyahs.map((ayah) => (
-              <AyahCard key={ayah.id} ayah={ayah} />
+              <AyahCard key={ayah.verse_key || ayah.number} ayah={ayah} />
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search className="h-16 w-16 mx-auto" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Try adjusting your search criteria or filters
-            </p>
+            <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No results found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Try adjusting your search or theme</p>
             <button
               onClick={clearFilters}
               className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200"
