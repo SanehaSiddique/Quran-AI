@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    /* 🌿 Sage color palette */
+    --color-sage-50: #f6f7f6;
+    --color-sage-100: #e3e8e3;
+    --color-sage-200: #c7d2c7;
+    --color-sage-300: #a3b5a3;
+    --color-sage-400: #7d947d;
+    --color-sage-500: #8FBC8F;
+    --color-sage-600: #5a6b5a;
+    --color-sage-700: #4a564a;
+    --color-sage-800: #3d473d;
+    --color-sage-900: #343a34;
+
+    /* ✨ Gold color palette */
+    --color-gold-50: #fdfcf0;
+    --color-gold-100: #fcf7d6;
+    --color-gold-200: #f9edac;
+    --color-gold-300: #f5df77;
+    --color-gold-400: #f0cc4f;
+    --color-gold-500: #DAA520;
+    --color-gold-600: #c5941d;
+    --color-gold-700: #a4741b;
+    --color-gold-800: #865d1c;
+    --color-gold-900: #704d1c;
+
+    /* 🍦 Cream color palette */
+    --color-cream-50: #FAFAFA;
+    --color-cream-100: #F5F5DC;
+    --color-cream-200: #f0f0c7;
+    --color-cream-300: #ebebac;
+    --color-cream-400: #e6e691;
+    --color-cream-500: #e1e176;
+    --color-cream-600: #dcdc5b;
+    --color-cream-700: #d7d740;
+    --color-cream-800: #d2d225;
+    --color-cream-900: #cdcd0a;
+
+    /* 🌐 Fonts */
+    --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif;
+    --font-body: 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif;
+    --font-mono: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+    --font-arabic: 'Amiri', serif;
+}
