@@ -1,0 +1,13 @@
+basically what i have done yet is:
+- used the mock data for the frontend
+- used redux for state mangement
+    - first of all, made a store in redux/ the store uses two slices (i) authSlice and (ii) favoritesSlice
+    - the purpose of doing is that my app gets the real time changes in th UI layer
+    - authSlice contains the login, logout reducers
+    - favoritesSlice contains the add, remove reducers and selectfavorites and selectIsFavorite two actions
+    - wrap the whole App.jsx in Provider in Main.jsx file.
+
+- authModal controls the login/signup
+- I think the rest is easy to understand
+- one more thing is that I just made a component of darkmode toggle and then used it in the header plus added class='dark' in html tag rest is handled by tailwind I dont need any state managemnet or context.
+
