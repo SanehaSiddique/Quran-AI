@@ -5,8 +5,8 @@ import ReactMarkdown from 'react-markdown';
 
 const TafsirModal = ({ ayah, onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 border dark:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-10 backdrop-blur-sm p-4">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
         
         {/* Close Button */}
         <button

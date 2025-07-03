@@ -78,12 +78,6 @@ export const surahs = [
     'Al-Falaq', 'An-Nas'
 ];
 
-export const themes = [
-    'Trust in Allah', 'Patience', 'Hope', 'Worship', 'Righteousness',
-    'Self-improvement', 'Mercy', 'Justice', 'Gratitude', 'Forgiveness',
-    'Knowledge', 'Family', 'Community', 'Faith', 'Prayer'
-];
-
 export const inspirationalQuotes = [
     "Verily, in the remembrance of Allah do hearts find rest. - Quran 13:28",
     "And Allah is the best of planners. - Quran 8:30",

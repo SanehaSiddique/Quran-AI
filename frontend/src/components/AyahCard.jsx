@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Heart, Volume2, Copy } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { addToFavorites, removeFromFavorites, selectIsFavorite } from '../redux/slices/favoritesSlice';
 import TafsirModal from './TafsirModal';
 import ReactMarkdown from 'react-markdown';
+import { ayahThemes } from '../data/themeMap';
 
 const reciters = [
     { id: 1, name: 'Mishary Rashid Al Afasy' },
@@ -12,11 +13,23 @@ const reciters = [
     { id: 4, name: 'Yasser Al Dosari' },
     { id: 5, name: 'Hani Ar Rifai' }
 ];
+const colorClasses = [
+    'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+    'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
+    'bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200',
+    'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
+    'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200',
+    'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+    'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200',
+    'bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200',
+];
 
-const AyahCard = ({ ayah, showActions = true }) => {
+
+const AyahCard = ({ ayah, showActions = true, onReciterChange }) => {
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
-    const isInFavorites = useAppSelector(state => selectIsFavorite(state, ayah.number));
+    const isInFavorites = useAppSelector(state => selectIsFavorite(state, ayah.id));
+    const userId = useAppSelector(state => state.auth.user?.id);
 
     const tafsirRef = useRef(null);
     const [showModal, setShowModal] = useState(false);
@@ -25,11 +38,34 @@ const AyahCard = ({ ayah, showActions = true }) => {
     const [showTafsir, setShowTafsir] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
+    const matchedThemes = useMemo(() => {
+        return ayahThemes
+            .filter(theme => theme.ayahs.includes(ayah.verse_key))
+            .map(theme => theme.label);
+    }, [ayah.verse_key]);
+
+
     const handleFavoriteToggle = () => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || !userId) return;
         isInFavorites
-            ? dispatch(removeFromFavorites(ayah.number))
-            : dispatch(addToFavorites(ayah));
+            ? dispatch(removeFromFavorites({ userId, ayahId: ayah.id }))
+            : dispatch(addToFavorites({ userId, ayah }));
+    };
+
+    const themeColorMap = {};
+
+    const getColorForTheme = (theme) => {
+        if (!themeColorMap[theme]) {
+            const randomIndex = Math.floor(Math.random() * colorClasses.length);
+            themeColorMap[theme] = colorClasses[randomIndex];
+        }
+        return themeColorMap[theme];
+    }
+
+    const handleReciterChange = (e) => {
+        const value = Number(e.target.value);
+        setSelectedReciter(value);
+        onReciterChange?.(ayah.id, value); // notify parent
     };
 
     const handlePlayAudio = () => {
@@ -103,14 +139,17 @@ const AyahCard = ({ ayah, showActions = true }) => {
                         <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs font-medium">
                             Ayah: {ayah.verse_key}
                         </span>
-                        {ayah.theme && (
-                            <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs font-medium">
-                                {ayah.theme}
+                        {matchedThemes.map((theme, i) => (
+                            <span
+                                key={i}
+                                className={`${getColorForTheme(theme)} px-2 py-1 rounded-full text-xs font-medium`}
+                            >
+                                {theme}
                             </span>
-                        )}
+                        ))}
                         <select
                             value={selectedReciter}
-                            onChange={(e) => setSelectedReciter(Number(e.target.value))}
+                            onChange={handleReciterChange}
                             className="text-xs border rounded px-2 py-1 dark:bg-gray-800 dark:text-white"
                         >
                             {reciters.map(r => (

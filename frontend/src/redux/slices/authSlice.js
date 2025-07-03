@@ -14,7 +14,8 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const res = await API.post('/login', { email, password });
+      const res = await API.post('/auth/login', { email, password });
+      console.log('Login response:', res.data);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Login failed');
@@ -27,7 +28,7 @@ export const signupUser = createAsyncThunk(
   'auth/signupUser',
   async ({ name, email, password }, { rejectWithValue }) => {
     try {
-      const res = await API.post('/signup', { name, email, password });
+      const res = await API.post('/auth/signup', { name, email, password });
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Signup failed');
@@ -48,6 +49,7 @@ const authSlice = createSlice({
       localStorage.removeItem('quran_auth');
       localStorage.removeItem('quran_user');
       localStorage.removeItem('quran_chat_sessions');
+      localStorage.removeItem('quran_token');
     },
     loadFromStorage(state) {
       const savedAuth = localStorage.getItem('quran_auth');
@@ -95,6 +97,7 @@ const authSlice = createSlice({
       localStorage.setItem('quran_auth', 'true');
       localStorage.setItem('quran_user', JSON.stringify(state.user));
       localStorage.setItem('quran_chat_sessions', JSON.stringify(state.chatSessions));
+      localStorage.setItem('quran_token', token);
     });
     builder.addCase(loginUser.rejected, (state, action) => {
       state.loading = false;
@@ -119,6 +122,7 @@ const authSlice = createSlice({
       localStorage.setItem('quran_auth', 'true');
       localStorage.setItem('quran_user', JSON.stringify(state.user));
       localStorage.setItem('quran_chat_sessions', JSON.stringify(state.chatSessions));
+      localStorage.setItem('quran_token', token);
     });
     builder.addCase(signupUser.rejected, (state, action) => {
       state.loading = false;

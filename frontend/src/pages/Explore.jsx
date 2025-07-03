@@ -2,9 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import AyahCard from '../components/AyahCard';
 import { surahs } from '../data/mockData';
+import { ayahThemes } from '../data/themeMap';
 import { useAppDispatch, useAppSelector } from '../redux/store';
-import { fetchAyahsBySurah } from '../redux/slices/ayahSlice';
-import API from '../../axiosInstance';
+import { fetchAyahsBySurah, fetchAyahsByVerseKeys } from '../redux/slices/ayahSlice';
 
 const Explore = () => {
   const dispatch = useAppDispatch();
@@ -13,42 +13,34 @@ const Explore = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSurah, setSelectedSurah] = useState('');
   const [themeQuery, setThemeQuery] = useState('');
-  const [aiAyahs, setAiAyahs] = useState([]);
-  const [isAIActive, setIsAIActive] = useState(false);
 
-  const ayahs = useMemo(() => {
-    return rawAyahs.map((ayah) => ({
-      ...ayah,
-    }));
-  }, [rawAyahs]);
+  const ayahs = useMemo(() => rawAyahs || [], [rawAyahs]);
 
   useEffect(() => {
-    if (selectedSurah) {
+    if (selectedSurah && !themeQuery) {
       const surahIndex = surahs.indexOf(selectedSurah) + 1;
       if (surahIndex > 0) dispatch(fetchAyahsBySurah(surahIndex));
-    }
-  }, [selectedSurah, dispatch]);
+    } else if (themeQuery) {
+      const themeObj = ayahThemes.find((t) => t.label === themeQuery);
+      if (!themeObj) return;
 
-  const handleAIThemeSearch = async () => {
-    if (!themeQuery || !selectedSurah) return alert("Please select a surah and enter a theme.");
-
-    const surahNo = surahs.indexOf(selectedSurah) + 1;
-    try {
-      const res = await API.post('/api/search-theme', {
-        theme: themeQuery,
-        surahNo,
-      });
-      setAiAyahs(res.data.matchedAyahs || []);
-      setIsAIActive(true);
-    } catch (error) {
-      alert("Failed to get results from AI.");
+      if (selectedSurah) {
+        // Filter theme ayahs within selected surah
+        const filteredAyahs = themeObj.ayahs.filter((v) => v.startsWith(`${surahs.indexOf(selectedSurah) + 1}:`));
+        if (filteredAyahs.length > 0) {
+          dispatch(fetchAyahsByVerseKeys(filteredAyahs));
+        } else {
+          // Still load the whole surah in case theme has nothing inside it
+          dispatch(fetchAyahsBySurah(surahs.indexOf(selectedSurah) + 1));
+        }
+      } else {
+        dispatch(fetchAyahsByVerseKeys(themeObj.ayahs));
+      }
     }
-  };
+  }, [selectedSurah, themeQuery, dispatch]);
 
   const filteredAyahs = useMemo(() => {
-    const list = isAIActive ? aiAyahs : ayahs;
-
-    return list.filter((ayah) => {
+    return ayahs.filter((ayah) => {
       const matchesSearch =
         searchQuery === '' ||
         ayah.numberInSurah?.toString().includes(searchQuery) ||
@@ -58,14 +50,12 @@ const Explore = () => {
 
       return matchesSearch;
     });
-  }, [searchQuery, isAIActive, aiAyahs, ayahs]);
+  }, [searchQuery, ayahs]);
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedSurah('');
     setThemeQuery('');
-    setAiAyahs([]);
-    setIsAIActive(false);
   };
 
   return (
@@ -78,7 +68,6 @@ const Explore = () => {
           </p>
         </div>
 
-        {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center mb-4">
             <Filter className="h-5 w-5 text-gray-500 mr-2" />
@@ -86,7 +75,6 @@ const Explore = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
@@ -98,7 +86,6 @@ const Explore = () => {
               />
             </div>
 
-            {/* Surah Dropdown */}
             <div>
               <select
                 value={selectedSurah}
@@ -112,25 +99,20 @@ const Explore = () => {
               </select>
             </div>
 
-            {/* AI Theme Input */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter a theme (e.g., Patience)"
+            <div>
+              <select
                 value={themeQuery}
                 onChange={(e) => setThemeQuery(e.target.value)}
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-              />
-              <button
-                onClick={handleAIThemeSearch}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200"
+                className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
               >
-                Search
-              </button>
+                <option value="">All Themes</option>
+                {ayahThemes.map((theme) => (
+                  <option key={theme.label} value={theme.label}>{theme.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Active Filters */}
           {(searchQuery || selectedSurah || themeQuery) && (
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2">
@@ -149,14 +131,12 @@ const Explore = () => {
           )}
         </div>
 
-        {/* Results */}
         <div className="mb-6">
           <p className="text-gray-600 dark:text-gray-400">
             Showing {filteredAyahs.length} result{filteredAyahs.length !== 1 ? 's' : ''}
           </p>
         </div>
 
-        {/* Ayah Cards */}
         {filteredAyahs.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredAyahs.map((ayah) => (

@@ -1,20 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart, Volume2, Trash2, LogIn } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../redux/store';
 import { removeFromFavorites, selectFavorites } from '../redux/slices/favoritesSlice';
 import AyahCard from '../components/AyahCard';
 
 const Favorites = () => {
+    const [currentlyPlayingId, setCurrentlyPlayingId] = useState(null);
+    const [reciterMap, setReciterMap] = useState({});
+
     const dispatch = useAppDispatch();
     const favorites = useAppSelector(selectFavorites);
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+    const userId = useAppSelector(state => state.auth.user?.id);
 
-    const handleRemoveFromFavorites = (id) => {
-        dispatch(removeFromFavorites(id));
+    const handleRemoveFromFavorites = (ayahId) => {
+        if (userId) {
+            dispatch(removeFromFavorites({ userId, ayahId }));
+        } else {
+            console.error('User ID not found. Cannot remove from favorites.');
+        }
+    };
+
+    const handleReciterChange = (ayahId, reciterId) => {
+        setReciterMap(prev => ({ ...prev, [ayahId]: reciterId }));
     };
 
     const handlePlayAudio = (ayah) => {
-        console.log('Playing audio for:', ayah.arabic);
+        const reciterId = reciterMap[ayah.id] || 1; // default to 1
+        const audio = new Audio(`https://the-quran-project.github.io/Quran-Audio/Data/${reciterId}/${ayah.surah}_${ayah.numberInSurah}.mp3`);
+        setCurrentlyPlayingId(ayah.id);
+        audio.play();
+        audio.onended = () => {
+            setCurrentlyPlayingId(null);
+        };
+        audio.onerror = () => {
+            setCurrentlyPlayingId(null);
+            console.error('Failed to play audio');
+        };
+    };
+
+    const playAllSequentially = async (favoritesList) => {
+        for (let ayah of favoritesList) {
+            await new Promise((resolve, reject) => {
+                const audio = new Audio(`https://the-quran-project.github.io/Quran-Audio/Data/2/${ayah.surah}_${ayah.numberInSurah}.mp3`);
+
+                audio.play();
+                audio.onended = resolve;
+                audio.onerror = reject;
+            });
+        }
     };
 
     // Show sign-in prompt for unauthenticated users
@@ -79,7 +113,7 @@ const Favorites = () => {
                             </div>
                             <div className="flex items-center space-x-4">
                                 <button
-                                    onClick={() => favorites.forEach(ayah => handlePlayAudio(ayah))}
+                                    onClick={() => playAllSequentially(favorites)}
                                     className="flex items-center space-x-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors duration-200"
                                 >
                                     <Volume2 className="h-4 w-4" />
@@ -94,25 +128,29 @@ const Favorites = () => {
                 {favorites.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {favorites.map((ayah) => (
-                            <div key={ayah.id} className="relative">
-                                <AyahCard ayah={ayah} showActions={false} />
-
-                                {/* Custom Actions */}
-                                <div className="absolute top-4 right-4 flex items-center space-x-2">
-                                    <button
-                                        onClick={() => handlePlayAudio(ayah)}
-                                        className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-md text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors duration-200"
-                                        aria-label="Play audio"
-                                    >
-                                        <Volume2 className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleRemoveFromFavorites(ayah.id)}
-                                        className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-md text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors duration-200"
-                                        aria-label="Remove from favorites"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
+                            <div key={ayah.id} className="relative min-w-0">
+                                <div className="relative">
+                                    <AyahCard ayah={ayah} showActions={false} onReciterChange={handleReciterChange} />
+                                    {/* Custom Actions */}
+                                    <div className="absolute bottom-4 right-4 flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handlePlayAudio(ayah)}
+                                            className={`p-2 bg-white dark:bg-gray-800 rounded-full dark:shadow-slate-700 shadow-md ${currentlyPlayingId === ayah.id
+                                                    ? 'text-blue-500'
+                                                    : 'text-gray-600 dark:text-gray-400 hover:text-blue-500'
+                                                } transition-colors duration-200`}
+                                            aria-label="Play audio"
+                                        >
+                                            <Volume2 className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleRemoveFromFavorites(ayah.id)}
+                                            className="p-2 bg-white dark:bg-gray-800 dark:shadow-slate-700 rounded-full shadow-md text-gray-600 dark:text-gray-400 hover:text-red-500 transition-colors duration-200"
+                                            aria-label="Remove from favorites"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
