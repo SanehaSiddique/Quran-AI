@@ -9,14 +9,17 @@ import Favorites from './pages/Favorites';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/favorites" element={<Favorites />} />
-        </Routes>
+        {/* Main content area - allows scrolling by default */}
+        <main className="flex-1">
+          <Routes>
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/favorites" element={<Favorites />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

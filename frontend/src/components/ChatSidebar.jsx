@@ -30,9 +30,14 @@ const ChatSidebar = ({ isOpen, onClose, onNewChat }) => {
 
             {/* Sidebar */}
             <div className={`
-        fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-transform duration-300 ease-in-out
+        fixed lg:sticky 
+        top-0 left-0 bottom-0 
+        w-80 bg-white dark:bg-gray-800 
+        border-r border-gray-200 dark:border-gray-700 
+        z-50 transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:relative lg:translate-x-0 lg:z-auto
+        lg:translate-x-0
+        overflow-y-auto
       `}>
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">

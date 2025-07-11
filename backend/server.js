@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require("./App/routes/authRoutes");
 const favoritesRoutes = require("./App/routes/favoritesRoutes");
+const chatRoutes = require("./App/routes/chatRoutes");
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(cors());           // to allow cross-origin requests
 
 app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/chat', chatRoutes);
 
 // it is the connectivity of mongoose with the database
 mongoose.connect(process.env.dbURL)     // it is a kind of promise so we can use .then() and .catch() methods

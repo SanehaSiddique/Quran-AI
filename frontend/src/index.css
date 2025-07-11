@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 @theme {
     /* 🌿 Sage color palette */
     --color-sage-50: #f6f7f6;
@@ -44,4 +52,148 @@
     --font-mono: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
     --font-arabic: 'Amiri', serif;
     --font-urdu: 'Noto Nastaliq Urdu', serif;
+}
+
+/* For prose content */
+.prose {
+    max-width: 65ch;
+}
+
+.prose-sm {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+}
+
+.prose a {
+    color: #10b981;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.prose a:hover {
+    text-decoration: underline;
+}
+
+.prose ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.prose li {
+    margin-bottom: 0.25rem;
+}
+
+.prose h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #111827;
+}
+
+.dark .prose h2 {
+    color: #f3f4f6;
+}
+
+.prose h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #111827;
+}
+
+.dark .prose h3 {
+    color: #f3f4f6;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}
+
+.prose strong {
+    font-weight: 600;
+}
+
+.prose blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1rem;
+    margin-left: 0;
+    font-style: italic;
+    color: #4b5563;
+}
+
+.dark .prose blockquote {
+    border-left-color: #4b5563;
+    color: #9ca3af;
+}
+
+.animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.delay-100 {
+    animation-delay: 0.1s;
+}
+
+.delay-200 {
+    animation-delay: 0.2s;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Sidebar sticky behavior */
+@layer components {
+    .sidebar-container {
+        @apply fixed lg:sticky top-0 left-0 bottom-0;
+        height: 100vh;
+        /* Full viewport height */
+    }
+
+    .main-content {
+        @apply flex-1 overflow-y-auto;
+        max-height: 100vh;
+    }
+}
+
+
+/* Ensure proper scrolling behavior */
+.scroll-container {
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    scrollbar-gutter: stable;
+    /* Prevent layout shift */
+}
+
+/* Custom scrollbar (optional) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
 }
