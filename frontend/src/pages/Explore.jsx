@@ -4,7 +4,7 @@ import AyahCard from '../components/AyahCard';
 import { surahs } from '../data/mockData';
 import { ayahThemes } from '../data/themeMap';
 import { useAppDispatch, useAppSelector } from '../redux/store';
-import { fetchAyahsBySurah, fetchAyahsByVerseKeys } from '../redux/slices/ayahSlice';
+import { fetchAyahsBySurah, fetchAyahsByVerseKeys, clearAyahs } from '../redux/slices/ayahSlice';
 
 const Explore = () => {
   const dispatch = useAppDispatch();
@@ -17,6 +17,11 @@ const Explore = () => {
   const ayahs = useMemo(() => rawAyahs || [], [rawAyahs]);
 
   useEffect(() => {
+    if (!searchQuery && !selectedSurah && !themeQuery) {
+      dispatch(clearAyahs());
+      return;
+    }
+
     if (selectedSurah && !themeQuery) {
       const surahIndex = surahs.indexOf(selectedSurah) + 1;
       if (surahIndex > 0) dispatch(fetchAyahsBySurah(surahIndex));
@@ -37,7 +42,7 @@ const Explore = () => {
         dispatch(fetchAyahsByVerseKeys(themeObj.ayahs));
       }
     }
-  }, [selectedSurah, themeQuery, dispatch]);
+  }, [selectedSurah, themeQuery, searchQuery, dispatch]);
 
   const filteredAyahs = useMemo(() => {
     return ayahs.filter((ayah) => {
@@ -56,6 +61,7 @@ const Explore = () => {
     setSearchQuery('');
     setSelectedSurah('');
     setThemeQuery('');
+    dispatch(clearAyahs());
   };
 
   return (

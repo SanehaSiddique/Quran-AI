@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Heart, Volume2, Bot, User, Copy, ChevronRight } from 'lucide-react';
+import { Heart, Volume2, Bot, User, Copy, Download } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../redux/store';
 import { addToFavorites, removeFromFavorites, selectIsFavorite } from '../redux/slices/favoritesSlice';
 import DOMPurify from 'dompurify';
@@ -17,26 +17,20 @@ const ChatMessage = ({ message }) => {
       
         // Robustly remove dir="rtl" from content (handle various cases)
         content = content
-          .replace(/\*\*dir="rtl"\*\*/gi, '') // Remove markdown-style dir="rtl"
-          .replace(/["']dir="rtl"["']/gi, '') // Remove quoted dir="rtl"
-          .replace(/dir="rtl"\s*/gi, '') // Remove standalone dir="rtl" with optional spaces
-          .trim(); // Remove any leading/trailing whitespace caused by removal
+          .replace(/\*\*dir="rtl"\*\*/gi, '') 
+          .replace(/["']dir="rtl"["']/gi, '') 
+          .replace(/dir="rtl"\s*/gi, '') 
+          .trim();
       
-        // Enhanced Arabic detection (includes more Arabic Unicode ranges)
+        // Enhanced Arabic detection
         const isArabic = (text) => /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
       
         let formatted = content
-          // Paragraph breaks for double newlines
           .replace(/\n\n/g, '</p><p class="mb-4">')
-          // Headings
           .replace(/^###\s(.*)$/gm, '<h3 class="text-lg font-semibold mb-3 mt-5 text-emerald-600 dark:text-emerald-400">$1</h3>')
-          // Bold text
           .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800 dark:text-gray-200">$1</strong>')
-          // Italic text
           .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700 dark:text-gray-300">$1</em>')
-          // List items
           .replace(/^\*\s(.*)$/gm, '<li class="flex items-start mb-2 pl-1"><ChevronRight className="w-4 h-4 mt-1 mr-2 flex-shrink-0 text-emerald-500" /><span>$1</span></li>')
-          // Quranic verses
           .replace(
             /(["'])(.*?)\1\s*\(Qur'an\s*(\d+:\d+)\)/g,
             (match, quote, verse, ref) => {
@@ -55,7 +49,6 @@ const ChatMessage = ({ message }) => {
                 </blockquote>`;
             }
           )
-          // Duas (improved Arabic pattern matching)
           .replace(
             /(["'])([\u0600-\u06FF].*?)\1/g,
             (match, quote, dua) => {
@@ -67,21 +60,17 @@ const ChatMessage = ({ message }) => {
                 </div>`;
             }
           )
-          // Blockquotes
           .replace(/^>\s(.*)$/gm, '<blockquote class="bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 italic pl-4 py-2 my-3 text-gray-700 dark:text-gray-300">$1</blockquote>')
-          // Single line breaks
           .replace(/\n/g, '<br />');
       
-        // Wrap lists in ul tags
         if (formatted.includes('<li')) {
           formatted = formatted.replace(/(<li.*?>.*?<\/li>)+/g, '<ul class="pl-2 mb-4 mt-2">$&</ul>');
         }
       
-        // Wrap content in paragraph tags
         formatted = `<div class="message-content">${formatted}</div>`;
       
         return formatted;
-      };
+    };
 
     const sanitizedContent = useMemo(() => {
         if (typeof message.content === 'string') {
@@ -105,6 +94,30 @@ const ChatMessage = ({ message }) => {
 
     const handlePlayAudio = () => {
         console.log('Playing audio for message:', message.id);
+    };
+
+    const handleCopy = () => {
+        const content = message.content || '';
+        navigator.clipboard.writeText(content).then(() => {
+            alert('Response copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            alert('Failed to copy response.');
+        });
+    };
+
+    const handleDownload = () => {
+        const content = message.content || '';
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bot_response_${message.id || 'message'}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('Response downloaded as text file!');
     };
 
     if (message.type === 'user') {
@@ -133,7 +146,22 @@ const ChatMessage = ({ message }) => {
                 className="prose prose-base dark:prose-invert max-w-none text-gray-800 dark:text-gray-200 leading-relaxed"
                 dangerouslySetInnerHTML={sanitizedContent}
               />
-              {/* Enhanced Ayah Display */}
+              <div className="mt-4 flex justify-end space-x-2">
+                <button
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-emerald-500 transition-colors"
+                  onClick={handleCopy}
+                  title="Copy response"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+                <button
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-emerald-500 transition-colors"
+                  onClick={handleDownload}
+                  title="Download response"
+                >
+                  <Download className="w-3 h-3" />
+                </button>
+              </div>
               {message.ayah && (
                 <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 p-4 rounded-lg">
@@ -154,7 +182,7 @@ const ChatMessage = ({ message }) => {
                         </h4>
                         <div className="flex space-x-2">
                           <button className="text-gray-400 hover:text-emerald-500 transition-colors">
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
